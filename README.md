@@ -1,3 +1,3 @@
 # Event RabbitMQ
 
-![](./dev/images/event-rabbmitmq.png=200x150)
+![Event RabbitMQ流程图](dev/images/event-rabbmitmq.small.png?dev/images/event-rabbmitmq.png)
