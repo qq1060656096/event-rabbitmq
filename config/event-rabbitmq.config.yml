@@ -1,0 +1,7 @@
+MONGODB: # mongodb配置
+  isAuth: false
+  user: "" # 用户
+  pass: "" # 密码
+  dbname: "" # 数据库
+  hosts:
+    - "localhost:27017" # 主机名:端口号(例如"localhost:27017")

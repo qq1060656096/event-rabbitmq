@@ -1,0 +1,9 @@
+QUEUE_GATEWAY: # 网管队列
+  route_key: gateway # 路由key
+  num: 1 # 单消费者队列
+  callback: "" # 回调函数
+
+QUEUE_SINGLE:
+  route_key: single_one # 路由key
+  num: 1 # 单消费者队列
+  callback: "" # 回调函数
