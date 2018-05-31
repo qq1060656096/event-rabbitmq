@@ -71,5 +71,5 @@ class MongoDB
         ];
         return $collection->insert($data, $options);
     }
-    
+
 }
