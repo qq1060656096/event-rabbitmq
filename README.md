@@ -25,4 +25,7 @@ php Service.php rabbit_queue_gateway
 # Mongodb操作
 ```sql
 db.getCollection("event_log").find({}).sort({"_id": -1});
+
+# 查询"event_user_register"事件
+db.getCollection("event_log").find({"eventKey": "event_user_register"}).sort({"_id": -1}).limit(100);
 ```
