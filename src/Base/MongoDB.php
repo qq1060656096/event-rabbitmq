@@ -19,7 +19,7 @@ class MongoDB
 
     private function __construct()
     {
-        $config = RabbitMqConfig::getCommon('MONGODB');
+        $config = RabbitMqConfig::getCommon('mongodb');
 
         $dbName = $config['dbname'];
         $hosts  = $config['hosts'];
@@ -30,13 +30,14 @@ class MongoDB
             'connectTimeoutMS'  => 3000000,
             'db'                => $dbName
         );
-        if ($config['isAuth']) {
+        if ($config['is_auth']) {
             $user = $config['user'];
             $pass = $config['pass'];
             $server = "mongodb://{$user}:{$pass}@{$hosts}";
         } else {
             $server = "mongodb://{$hosts}";
         }
+        var_dump($server);
         $this->db       = new \MongoClient($server);
         $this->dbName   = $dbName;
     }
@@ -48,7 +49,7 @@ class MongoDB
     public static function getInstance()
     {
         static $mongoDb = null;
-        if (!$mongoDb) {
+        if ($mongoDb) {
             return $mongoDb;
         }
         $mongoDb = new MongoDB();
@@ -58,14 +59,14 @@ class MongoDB
     /**
      * 插入集合数据
      *
-     * @param string $tableName 集合名
+     * @param string $collectionName 集合名
      * @param array $data 数据
      * @return array|bool
      */
-    public function insert($tableName, array $data)
+    public function insert($collectionName, array $data)
     {
 
-        $collection = $this->db->selectCollection($this->dbName, $tableName);
+        $collection = $this->db->selectCollection($this->dbName, $collectionName);
         $options    = [
             'w' => 1, // 设置写入需要ack确认
         ];

@@ -28,14 +28,23 @@ class RabbitMq
      */
     public function __construct($exchangeName, $exchangeType = AMQP_EX_TYPE_TOPIC)
     {
-        $this->connection = new \AMQPConnection();
+        $rabbitMqConfig = RabbitMqConfig::getCommon('rabbit_mq');
+        $credentials = [
+            'host'  => $rabbitMqConfig['host'],
+            'port'  => $rabbitMqConfig['port'],
+            'vhost' => $rabbitMqConfig['vhost'],
+            'login' => $rabbitMqConfig['user'],
+            'password' => $rabbitMqConfig['pass'],
+        ];
 
-        if (!$this->connection) {
+        $this->connection = new \AMQPConnection($credentials);
+
+        if (!$this->connection->connect()) {
             throw new EventMqRuntimeException("Cannot connect to rabbit server.");
         }
 
         // 创建通道
-        $this->channel = new \AMQPChannel();
+        $this->channel = new \AMQPChannel($this->connection);
         $this->channel->qos(0, 1);
 
         $this->exhange = new \AMQPExchange($this->channel);
@@ -70,9 +79,15 @@ class RabbitMq
         return $this->exhange;
     }
 
-
-    public function send($message, $routeKey)
+    /**
+     * 发送消息
+     * @param array $message 消息内容
+     * @param string $routeKey 路由key
+     * @return bool
+     */
+    public function send(array $message, $routeKey)
     {
-
+        $message = json_encode($message);
+        return $this->exhange->publish($message, $routeKey);
     }
 }

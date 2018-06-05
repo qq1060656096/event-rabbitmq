@@ -1,8 +1,8 @@
-EVENT_USER_REGISTER: # 用户注册
-  queue_name: single_queue # 队列名
+event_user_register: # 用户注册
+  queue_key: "rabbit_queue_single" # 队列名
   broadcast: true # 是否广播
   callback: "\\Demo\\Product.buy" # 回调
-EVENT_SEND_SMS: # 发送短信
+event_send_sms: # 发送短信
   queue_name: multi_queue # 队列名
   broadcast: false # 是否广播
   callback: "\\Demo\\Send.message" # 回调

@@ -12,6 +12,17 @@ use Zwei\Base\Config;
 class RabbitMqConfig extends Config
 {
     /**
+     * 获取公共配置
+     *
+     * @param string $name
+     * @return mixed
+     */
+    public static function getCommon($name)
+    {
+        return parent::get($name, 'event-rabbitmq', 'event-rabbitmq.config.yml');
+    }
+
+    /**
      * 获取指定事件配置
      *
      * @param string $name
@@ -30,16 +41,5 @@ class RabbitMqConfig extends Config
     public static function getQueue($name)
     {
         return parent::get($name, 'event-rabbitmq', 'queues.config.yml');
-    }
-
-    /**
-     * 获取公共配置
-     *
-     * @param string $name
-     * @return mixed
-     */
-    public static function getCommon($name)
-    {
-        return parent::get($name, 'event-rabbitmq', 'event-rabbitmq.config.yml');
     }
 }
