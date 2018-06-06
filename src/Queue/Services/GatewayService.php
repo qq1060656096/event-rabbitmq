@@ -1,79 +1,37 @@
 <?php
-namespace Zwei\EventRabbitMQ\Gateway;
-
-use Zwei\Base\Exception\ConfigException;
-use Zwei\EventRabbitMQ\Base\Helper;
-use Zwei\EventRabbitMQ\Base\MongoDB;
-use Zwei\EventRabbitMQ\Base\RabbitMq;
-use Zwei\EventRabbitMQ\Base\RabbitMqConfig;
+namespace Zwei\EventRabbitMQ\Queue;
+use Zwei\EventRabbitMQ\Gateway\Service;
 
 /**
- * 网管服务
+ * 网管服务分发
  *
- * Class Service
- * @package Zwei\EventRabbitMQ\Gateway
+ * Class GatewayService
+ * @package Zwei\EventRabbitMQ\Queue
  */
-class Service
+class GatewayService extends BaseService implements QueueInterface
 {
     /**
-     * 交换器名称
-     * @var string
-     */
-    private static $exchangeName = null;
-
-    /**
-     * 交换器类型
-     * @var string
-     */
-    private static $exchangeType = null;
-
-    /**
-     * @var RabbitMq
-     */
-    private static $rabbtMq = null;
-
-    /**
-     * 队列
-     * @var \AMQPQueue
-     */
-    private static $queue = null;
-
-    /**
-     * 队列配置
-     * @var array
-     */
-    private static $queueConfig = null;
-
-    /**
-     * 版本号
-     * @var string
-     */
-    private static $version = null;
-
-    /**
      * 网管分发
-     */
-    /**
      * @param string $queueKey 队列名
      */
-    public static function distribute($queueKey)
+    public function work($queueKey)
     {
         // 重启队列
 //        Helper::queueReload();
-
+        $this->queueKey     = $queueKey;
         $rabbitMqConfig     = RabbitMqConfig::getCommon('rabbit_mq');
-        self::$exchangeName = $rabbitMqConfig['exchange_name'];
-        self::$exchangeType = AMQP_EX_TYPE_TOPIC;
-        self::$queueConfig  = RabbitMqConfig::getQueue($queueKey);
-        self::$version      = Helper::getVersion();
+        $this->exchangeName = $rabbitMqConfig['exchange_name'];
+        $this->exchangeType = AMQP_EX_TYPE_TOPIC;
+        $this->queueConfig  = RabbitMqConfig::getQueue($queueKey);
+        $this->version      = Helper::getVersion();
 
-        self::$rabbtMq      = new RabbitMq(self::$exchangeName, self::$exchangeType);
-        self::$queue        = new \AMQPQueue(self::$rabbtMq->getChannel());
-        self::$queue->setName('route_gateway');// 设置队列名
-        self::$queue->setFlags(AMQP_DURABLE);// 设置队列持久化
-        self::$queue->declareQueue();// 队列存在创建,否者就不创建
+        $this->rabbtMq      = new RabbitMq($this->exchangeName, $this->exchangeType);
+        $this->queue        = new \AMQPQueue($this->rabbtMq->getChannel());
+        $this->queue->setName('route_gateway');// 设置队列名
+        $this->queue->setFlags(AMQP_DURABLE);// 设置队列持久化
+        $this->queue->declareQueue();// 队列存在创建,否者就不创建
         while (true) {
-            self::$queue->consume(__CLASS__.'::receive');
+            $this->queue->consume([$this, 'receive']);
         }
     }
 
@@ -83,7 +41,7 @@ class Service
      * @param \AMQPEnvelope $envelope
      * @param \AMQPQueue $queue
      */
-    public static function receive($envelope, $queue)
+    public function receive($envelope, $queue)
     {
         $nowTime = time();
         $msgJson = $envelope->getBody();
@@ -93,7 +51,7 @@ class Service
             switch ($msgJson['data']) {
                 case 'reload':
                     echo sprintf("[date:%s]Event RabbitMQ: gateway reload.\n", date('Y-m-d H:i:s', $nowTime));
-                    self::$rabbtMq->disconnection();
+                    $this->rabbtMq->disconnection();
                     exit();
                     break;
             }
@@ -115,14 +73,14 @@ class Service
             'eventKey'      => $msgJson['eventKey'],
             'time'          => $nowTime,
             'ip'            => $msgJson['ip'],
-            'version'       => self::$version,
+            'version'       => $this->version,
             'data'          => $msgJson['data'],
             'additional'    => [],
         ];
 
         // 持久化到mongodb
         try {
-            $collectionName = Helper::getCollection();
+            $collectionName = Helper::getCollectionName();
             MongoDB::getInstance()->insert($collectionName, $eventData);
         } catch (\Exception $e) {
             echo sprintf("[date:%s]Event RabbitMQ: %s.\n", date('Y-m-d H:i:s', $nowTime), $e->getMessage());
@@ -130,13 +88,14 @@ class Service
         }
         // 消息转发
         $queueConfig = RabbitMqConfig::getQueue($eventConfig['queue_key']);
-        $rabbitMq = new RabbitMq(self::$exchangeName, self::$exchangeType);
+        $rabbitMq = new RabbitMq($this->exchangeName, $this->exchangeType);
         $rabbitMq->send($eventData, $queueConfig['route_key']);
         $queue->ack($envelope->getDeliveryTag());
     }
 }
 
-require_once dirname(dirname(__DIR__)).'/vendor/autoload.php';
+require_once dirname(dirname(dirname(__DIR__))).'/vendor/autoload.php';
 
 $queueKey = $argv[1];
-Service::distribute($queueKey);
+$service = new GatewayService();
+$service->work($queueKey);

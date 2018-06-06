@@ -36,7 +36,7 @@ class Helper
      * 获取集合名
      * @return string
      */
-    public static function getCollection()
+    public static function getCollectionName()
     {
         $collectionName = RabbitMqConfig::getCommon('mongodb')['collection'];
         return $collectionName;

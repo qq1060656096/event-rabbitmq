@@ -1,12 +1,14 @@
-rabbit_queue_console: # 重启队列
+rabbit_event_queue_console: # 重启队列
   route_key: "route_console" # 路由key
 
-rabbit_queue_gateway: # 网管队列
+rabbit_event_queue_gateway: # 网管队列
   route_key: "route_gateway" # 路由key
   num: 1 # 单消费者队列
 
 rabbit_queue_single: # 单队列
   route_key: single_one # 路由key
+  forward: false # 是否转发,false 不转发, true 转发
+  forward_queue_key: "queue_mutil" # 转发队列key
   num: 1 # 单消费者队列
   callback: "" # 回调函数
 

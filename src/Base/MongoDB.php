@@ -37,7 +37,7 @@ class MongoDB
         } else {
             $server = "mongodb://{$hosts}";
         }
-        var_dump($server);
+//        var_dump($server);
         $this->db       = new \MongoClient($server);
         $this->dbName   = $dbName;
     }
@@ -71,6 +71,20 @@ class MongoDB
             'w' => 1, // 设置写入需要ack确认
         ];
         return $collection->insert($data, $options);
+    }
+
+    /**
+     * 保存数据到集合
+     *
+     * @param string $collectionName 集合名
+     * @param array $data 保存数据
+     * @param array $where where条件
+     * @return bool
+     */
+    public function update($collectionName, array $data, array $where)
+    {
+        $collection = $this->db->selectCollection($this->dbName, $collectionName);
+        return $collection->update($where, $data);
     }
 
 }
