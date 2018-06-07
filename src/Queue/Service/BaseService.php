@@ -1,5 +1,7 @@
 <?php
-namespace Zwei\EventRabbitMQ\Queue;
+namespace Zwei\EventRabbitMQ\Queue\Service;
+
+use Zwei\EventRabbitMQ\Base\Helper;
 
 /**
  * 服务基类
@@ -48,4 +50,16 @@ class BaseService
      * @var string
      */
     protected $version = null;
+
+    /**
+     * 保持心跳
+     */
+    public static function ping()
+    {
+        // 保持心跳
+        if (Helper::isPing()) {
+            Helper::pingMongo();
+            Helper::pingRedis();
+        }
+    }
 }

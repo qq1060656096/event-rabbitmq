@@ -27,5 +27,20 @@ php Service.php rabbit_queue_gateway
 db.getCollection("event_log").find({}).sort({"_id": -1});
 
 # 查询"event_user_register"事件
-db.getCollection("event_log").find({"eventKey": "event_user_register"}).sort({"_id": -1}).limit(100);
+db.getCollection("event_log").find({"eventKey": "event_user_register"}).pretty().sort({"_id": -1}).limit(100);
+```
+
+# 单元测试
+```bash
+php vendor/phpunit/phpunit/phpunit --bootstrap vendor/autoload.php src/Tests/Queue/Services/GatewayServiceTest.php --filter testWork
+
+# 网管测试脚本
+php src/Tests/Run/RunGatewayService.php
+
+# 发送Console事件
+php vendor/phpunit/phpunit/phpunit --bootstrap vendor/autoload.php src/Tests/Queue/Services/GatewayServiceTest.php --filter testSendEventKeyEventConsole
+# 发送非法事件
+php vendor/phpunit/phpunit/phpunit --bootstrap vendor/autoload.php src/Tests/Queue/Services/GatewayServiceTest.php --filter testSendEventKeyEventNotFund
+# 发送注册消息
+php vendor/phpunit/phpunit/phpunit --bootstrap vendor/autoload.php src/Tests/Queue/Services/GatewayServiceTest.php --filter testSendEventKeyEventUserRegister
 ```

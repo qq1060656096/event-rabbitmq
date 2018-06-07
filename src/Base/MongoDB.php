@@ -57,6 +57,24 @@ class MongoDB
     }
 
     /**
+     * 获取连接实例
+     * @return \MongoClient
+     */
+    public function getDB()
+    {
+        return $this->db;
+    }
+
+    /**
+     * 获取连接数据名
+     * @return string
+     */
+    public function getDbName()
+    {
+        return $this->dbName;
+    }
+
+    /**
      * 插入集合数据
      *
      * @param string $collectionName 集合名

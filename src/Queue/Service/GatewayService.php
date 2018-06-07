@@ -1,6 +1,13 @@
 <?php
-namespace Zwei\EventRabbitMQ\Queue;
-use Zwei\EventRabbitMQ\Gateway\Service;
+namespace Zwei\EventRabbitMQ\Queue\Service;
+
+use Zwei\Base\Exception\ConfigException;
+use Zwei\EventRabbitMQ\Base\MongoDB;
+use Zwei\EventRabbitMQ\Base\RabbitMqConfig;
+use Zwei\EventRabbitMQ\Base\Helper;
+use Zwei\EventRabbitMQ\Base\RabbitMq;
+use Zwei\EventRabbitMQ\Queue\QueueInterface;
+
 
 /**
  * 网管服务分发
@@ -27,9 +34,10 @@ class GatewayService extends BaseService implements QueueInterface
 
         $this->rabbtMq      = new RabbitMq($this->exchangeName, $this->exchangeType);
         $this->queue        = new \AMQPQueue($this->rabbtMq->getChannel());
-        $this->queue->setName('route_gateway');// 设置队列名
+        $this->queue->setName($queueKey);// 设置队列名
         $this->queue->setFlags(AMQP_DURABLE);// 设置队列持久化
         $this->queue->declareQueue();// 队列存在创建,否者就不创建
+        $this->queue->bind($this->exchangeName, $this->queueConfig['route_key']);// 绑定route_key
         while (true) {
             $this->queue->consume([$this, 'receive']);
         }
@@ -44,6 +52,9 @@ class GatewayService extends BaseService implements QueueInterface
     public function receive($envelope, $queue)
     {
         $nowTime = time();
+        // 保持心跳
+        self::ping();
+
         $msgJson = $envelope->getBody();
         $msgJson = json_decode($msgJson, true);
         if ($msgJson['eventKey'] == 'Console') {
@@ -60,11 +71,10 @@ class GatewayService extends BaseService implements QueueInterface
         try {
             $eventConfig = RabbitMqConfig::getEvent($msgJson['eventKey']);
         } catch (ConfigException $e) { // 非法消息,直接确认
-            echo sprintf("[date:%s]Event RabbitMQ: eventKey not found.\n", date('Y-m-d H:i:s', $nowTime));
+            echo sprintf("[date:%s]Event RabbitMQ: eventKey \"%s\" not found.\n", date('Y-m-d H:i:s', $nowTime), $msgJson['eventKey']);
             $queue->ack($envelope->getDeliveryTag());
             return ;
         }
-
 
         // 合法的消息持久化
         $eventData = [
@@ -94,8 +104,8 @@ class GatewayService extends BaseService implements QueueInterface
     }
 }
 
-require_once dirname(dirname(dirname(__DIR__))).'/vendor/autoload.php';
-
-$queueKey = $argv[1];
-$service = new GatewayService();
-$service->work($queueKey);
+//require_once dirname(dirname(dirname(__DIR__))).'/vendor/autoload.php';
+//
+//$queueKey = $argv[1];
+//$service = new GatewayService();
+//$service->work($queueKey);

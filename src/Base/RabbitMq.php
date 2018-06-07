@@ -60,7 +60,7 @@ class RabbitMq
      */
     public function disconnection()
     {
-        $this->_connection->disconnect();
+        $this->connection->disconnect();
     }
 
     /**
