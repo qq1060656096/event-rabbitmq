@@ -1,5 +1,6 @@
 <?php
-namespace Zwei\EventRabbitMQ\Queue;
+namespace Zwei\EventRabbitMQ\Queue\Service;
+
 use Zwei\EventRabbitMQ\Base\Helper;
 use Zwei\EventRabbitMQ\Base\MongoDB;
 use Zwei\EventRabbitMQ\Base\RabbitMq;
@@ -9,7 +10,7 @@ use Zwei\EventRabbitMQ\Base\RabbitMqConfig;
  * 标准服务处理消息
  *
  * Class StandardService
- * @package Zwei\EventRabbitMQ\Queue
+ * @package Zwei\EventRabbitMQ\Queue\Service
  */
 class StandardService extends BaseService  implements QueueInterface
 {
@@ -40,6 +41,7 @@ class StandardService extends BaseService  implements QueueInterface
         $this->queue->setName($this->queueKey);// 设置队列名
         $this->queue->setFlags(AMQP_DURABLE);// 设置队列持久化
         $this->queue->declareQueue();// 队列存在创建,否者就不创建
+        $this->queue->bind($this->exchangeName, $this->queueConfig['route_key']);// 绑定route_key
         while (true) {
             $this->queue->consume([$this, 'receive']);
         }
@@ -54,6 +56,9 @@ class StandardService extends BaseService  implements QueueInterface
     public function receive($envelope, $queue)
     {
         $nowTime = time();
+        // 保持心跳
+        $this->ping();
+
         $msgJson = $envelope->getBody();
         $msgJson = json_decode($msgJson, true);
         if ($msgJson['eventKey'] == 'Console') {

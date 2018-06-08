@@ -11,8 +11,3 @@ rabbit_queue_single: # 单队列
   forward_queue_key: "queue_mutil" # 转发队列key
   num: 1 # 单消费者队列
   callback: "" # 回调函数
-
-queue_mutil: # 多队列
-  route_key: single_one # 路由key
-  num: 1 # 单消费者队列
-  callback: "" # 回调函数

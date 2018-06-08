@@ -13,5 +13,4 @@ rabbit_mq: # rabbit mq 配置
   user: "admin" # 用户名
   pass: "admin" # 密码
   exchange_name: "exchange_live" # 交换器名称
-
-rabbit_mq_ping_time: 20 # 保持心跳默认20秒,防止
+rabbit_mq_ping_interval_time: 20 # 心跳间隔时间: 20秒

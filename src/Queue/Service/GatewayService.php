@@ -53,7 +53,7 @@ class GatewayService extends BaseService implements QueueInterface
     {
         $nowTime = time();
         // 保持心跳
-        self::ping();
+        $this->ping();
 
         $msgJson = $envelope->getBody();
         $msgJson = json_decode($msgJson, true);

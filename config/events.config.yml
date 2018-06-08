@@ -3,6 +3,8 @@ event_user_register: # 用户注册
   broadcast: true # 是否广播
   callback: "\\Demo\\Product.buy" # 回调
 event_send_sms: # 发送短信
-  queue_name: multi_queue # 队列名
-  broadcast: false # 是否广播
+  queue_key: "rabbit_queue_single" # 队列名
   callback: "\\Demo\\Send.message" # 回调
+  forward: false # 是否转发
+  forward_queue_key: "" # 转发到那个队列
+  broadcast: true # 是否广播

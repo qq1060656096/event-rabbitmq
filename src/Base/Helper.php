@@ -54,21 +54,6 @@ class Helper
         return $exchangeName;
     }
 
-    /**
-     * 是否心跳
-     *
-     * @return bool
-     */
-    public static function isPing()
-    {
-        static $pingTime = 0;
-        $nowTime = time();
-        if ($pingTime + 20 < $nowTime) {
-            $pingTime = $nowTime;
-            return true;
-        }
-        return false;
-    }
 
     /**
      * mongoDB保持心跳

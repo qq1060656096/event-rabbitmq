@@ -2,6 +2,7 @@
 namespace Zwei\EventRabbitMQ\Queue\Service;
 
 use Zwei\EventRabbitMQ\Base\Helper;
+use Zwei\EventRabbitMQ\Base\RabbitMqConfig;
 
 /**
  * 服务基类
@@ -52,12 +53,35 @@ class BaseService
     protected $version = null;
 
     /**
+     * 上次ping时间
+     * @var int
+     */
+    protected $lastPingTime = 0;
+
+        /**
+         * 是否心跳
+         *
+         * @return bool
+         */
+    public function isPing()
+    {
+        $nowTime = time();
+        // 心跳间隔时间
+        $pingInteralTime = RabbitMqConfig::getCommon('rabbit_mq_ping_interval_time');
+        if ($this->lastPingTime + $pingInteralTime < $nowTime) {
+            $this->lastPingTime = $nowTime;
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * 保持心跳
      */
-    public static function ping()
+    public function ping()
     {
         // 保持心跳
-        if (Helper::isPing()) {
+        if ($this->isPing()) {
             Helper::pingMongo();
             Helper::pingRedis();
         }
