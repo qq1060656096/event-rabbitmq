@@ -20,8 +20,9 @@
 {
 	"require": {
 		"zwei/rabbitmq-event": "dev-master"
-    }
-}	
+    },
+	"minimum-stability": "dev"
+}
 ```
 
 
