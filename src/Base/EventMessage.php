@@ -16,13 +16,15 @@ class EventMessage
      * @param string $ip ip地址
      * @return string
      */
-    public static function send($eventKey,array $data, $ip = "0.0.0.0")
+    public static function send($eventKey, array $data, $ip = "0.0.0.0")
     {
+
         $id = self::getId($ip);
         $ventData = [
             '_id'       => $id,
             'eventKey'  => $eventKey,
             'data'      => $data,
+            'ip'        => $ip,
         ];
         $exchangeName   = Helper::getExchangeName();
         $rabbitMq       = new RabbitMq($exchangeName);
@@ -38,7 +40,15 @@ class EventMessage
      */
     public static function getId($ip)
     {
-        $id = time().$ip.getmypid();
+        static $count;
+        $count ++;
+        $idArr = [
+            time(),
+            $ip,
+            getmypid(),
+            $count
+        ];
+        $id = implode('-', $idArr);
         return $id;
     }
 }

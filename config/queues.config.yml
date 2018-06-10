@@ -5,7 +5,7 @@ rabbit_queue_gateway: # 网管队列
   route_key: "route_gateway" # 路由key
   num: 1 # 单消费者队列
 
-rabbit_queue_single: # 单队列
+youhua : # 单队列
   route_key: route_single # 路由key
   forward: false # 是否转发,false 不转发, true 转发
   forward_queue_key: "queue_mutil" # 转发队列key
