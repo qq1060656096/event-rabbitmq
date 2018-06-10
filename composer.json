@@ -39,5 +39,6 @@
     "post-update-cmd":[
       "Zwei\\RabbitMqEvent\\Composer\\Scripts::postPackageInstall"
     ]
-  }
+  },
+  "minimum-stability": "dev"
 }
