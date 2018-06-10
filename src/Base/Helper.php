@@ -1,5 +1,5 @@
 <?php
-namespace Zwei\EventRabbitMQ\Base;
+namespace Zwei\RabbitMqEvent\Base;
 
 
 class Helper
@@ -10,7 +10,7 @@ class Helper
      */
     public static function getVersion()
     {
-        $version = '';
+        $version = '1.0.0.0';
         return $version;
     }
 

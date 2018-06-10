@@ -1,5 +1,5 @@
 <?php
-namespace Zwei\EventRabbitMQ\Base;
+namespace Zwei\RabbitMqEvent\Base;
 
 use Zwei\Base\Config;
 
@@ -7,7 +7,7 @@ use Zwei\Base\Config;
  * 获取配置
  *
  * Class RabbitMqConfig
- * @package Zwei\EventRabbitMQ\Base
+ * @package Zwei\RabbitMqEvent\Base
  */
 class RabbitMqConfig extends Config
 {

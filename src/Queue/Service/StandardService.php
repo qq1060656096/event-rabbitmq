@@ -1,16 +1,17 @@
 <?php
-namespace Zwei\EventRabbitMQ\Queue\Service;
+namespace Zwei\RabbitMqEvent\Queue\Service;
 
-use Zwei\EventRabbitMQ\Base\Helper;
-use Zwei\EventRabbitMQ\Base\MongoDB;
-use Zwei\EventRabbitMQ\Base\RabbitMq;
-use Zwei\EventRabbitMQ\Base\RabbitMqConfig;
+use Zwei\RabbitMqEvent\Base\Helper;
+use Zwei\RabbitMqEvent\Base\MongoDB;
+use Zwei\RabbitMqEvent\Base\RabbitMq;
+use Zwei\RabbitMqEvent\Base\RabbitMqConfig;
+use Zwei\RabbitMqEvent\Queue\QueueInterface;
 
 /**
  * 标准服务处理消息
  *
  * Class StandardService
- * @package Zwei\EventRabbitMQ\Queue\Service
+ * @package Zwei\RabbitMqEvent\Queue\Service
  */
 class StandardService extends BaseService  implements QueueInterface
 {
@@ -27,6 +28,7 @@ class StandardService extends BaseService  implements QueueInterface
      */
     public function work($queueKey)
     {
+
         // 重启队列
 //        Helper::queueReload();
         $this->queueKey     = $queueKey;
@@ -42,9 +44,11 @@ class StandardService extends BaseService  implements QueueInterface
         $this->queue->setFlags(AMQP_DURABLE);// 设置队列持久化
         $this->queue->declareQueue();// 队列存在创建,否者就不创建
         $this->queue->bind($this->exchangeName, $this->queueConfig['route_key']);// 绑定route_key
+
         while (true) {
             $this->queue->consume([$this, 'receive']);
         }
+        $this->rabbtMq->disconnection();
     }
 
     /**
@@ -57,7 +61,7 @@ class StandardService extends BaseService  implements QueueInterface
     {
         $nowTime = time();
         // 保持心跳
-        $this->ping();
+//        $this->ping();
 
         $msgJson = $envelope->getBody();
         $msgJson = json_decode($msgJson, true);
@@ -94,14 +98,15 @@ class StandardService extends BaseService  implements QueueInterface
         try {
             if ($result = $this->callback($msgJson)) {
                 $queue->ack($envelope->getDeliveryTag());
-                $this->receiveSuccess($msgJson, $result);
+                $this->callbackSuccess($msgJson, $result);
             } else {
                 $queue->ack($envelope->getDeliveryTag());
-                $this->receiveFail($msgJson);
+                $this->callbackFail($msgJson);
             }
         } catch (\Exception $e) { // 非法消息,直接确认
+            echo $e;
             $queue->ack($envelope->getDeliveryTag());
-            $this->receiveException($msgJson, $e);
+            $this->callbackException($msgJson, $e);
             return ;
         }
 
@@ -136,7 +141,7 @@ class StandardService extends BaseService  implements QueueInterface
                 'additional' => $additional
             ]
         ];
-        $collectionName = Helper::getCollection();
+        $collectionName = Helper::getCollectionName();
         MongoDB::getInstance()->update($collectionName, $saveData, $where);
 
         // 普通队列, 广播消息
@@ -154,7 +159,7 @@ class StandardService extends BaseService  implements QueueInterface
      * @param array $message 消息
      * @param array $additional 附加消息
      */
-    public function callbackFail(array $message, array $additional)
+    public function callbackFail(array $message, array $additional = [])
     {
         $where = ['_id' => $message['_id']];
         // 监听队列
@@ -174,7 +179,7 @@ class StandardService extends BaseService  implements QueueInterface
                 'additional' => $additional
             ]
         ];
-        $collectionName = Helper::getCollection();
+        $collectionName = Helper::getCollectionName();
         MongoDB::getInstance()->update($collectionName, $saveData, $where);
         return;
     }
@@ -200,23 +205,21 @@ class StandardService extends BaseService  implements QueueInterface
                 'listenQueueKey'    => $this->queueKey,
                 'error' => $exception,
             ];
-            $saveData = [
-                '$push' => [
-                    'additional' => $additional
-                ]
+
+        } else {// 普通事件队列
+            $additional = [
+                'eventKey'  => $message['eventKey'],
+                'error'     => $exception,
             ];
-            $collectionName = Helper::getCollection();
-            MongoDB::getInstance()->update($collectionName, $saveData, $where);
-            return;
         }
-        // 普通队列
+
         $saveData = [
             '$set' => ['status' => -1],
             '$push' => [
-                'error' => $exception
+                'additional' => $additional
             ]
         ];
-        $collectionName = Helper::getCollection();
+        $collectionName = Helper::getCollectionName();
         MongoDB::getInstance()->update($collectionName, $saveData, $where);
         return;
     }
@@ -230,6 +233,7 @@ class StandardService extends BaseService  implements QueueInterface
         $eventConfig = RabbitMqConfig::getEvent($message['eventKey']);
         $callback = $eventConfig['callback'];
         list($class, $staticFunction) = explode('.', $callback);
-        return call_user_func($class.'::'. $staticFunction, [$message]);
+        unset($message['additional']);
+        return call_user_func($class.'::'. $staticFunction, $message);
     }
 }

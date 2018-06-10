@@ -14,7 +14,7 @@ php Service.php rabbit_queue_gateway
 ```json
 {
     "_id":"201718060501-127_0_0_1-1000",
-    "eventKey":"event_user_register",
+    "eventKey":"event_demo_user_register",
     "ip":"127.0.0.1",
     "data":{
         "phone":"15412345678"
@@ -34,8 +34,23 @@ db.getCollection("event_log").find({"eventKey": "event_user_register"}).pretty()
 ```bash
 php vendor/phpunit/phpunit/phpunit --bootstrap vendor/autoload.php src/Tests/Queue/Services/GatewayServiceTest.php --filter testWork
 
-# 网管测试脚本
-php src/Tests/Run/RunGatewayService.php
+# 网管测试
+php vendor/bin/zwei/event-rabbitmq/run-gateway-service.php
+
+# 普通队列
+php vendor/bin/zwei/event-rabbitmq/run-standard-service.php rabbit_queue_single
+{
+    "_id":"201718060501-127_0_0_1-1001",
+    "eventKey":"event_demo_user_register",
+    "ip":"127.0.0.1",
+    "data":{
+        "phone":"15412345678"
+    }
+}
+# 发送测试事件
+php vendor/bin/zwei/event-rabbitmq/run-send-test-event-message.php 事件key 运行次数(-1: 一直运行) 间隔时间(默认1秒)
+php vendor/bin/zwei/event-rabbitmq/run-send-test-event-message.php event_demo_user_register_success -1 1 # 一直运行脚本,每秒发送一次事件
+php vendor/bin/zwei/event-rabbitmq/run-send-test-event-message.php event_demo_user_register_success 2 0 # 运行2次脚本,连续发送事件
 
 # 发送Console事件
 php vendor/phpunit/phpunit/phpunit --bootstrap vendor/autoload.php src/Tests/Queue/Services/GatewayServiceTest.php --filter testSendEventKeyEventConsole

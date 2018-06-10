@@ -1,11 +1,11 @@
 <?php
-namespace Zwei\EventRabbitMQ\Base;
+namespace Zwei\RabbitMqEvent\Base;
 
 /**
  * 事件消息
  *
  * Class EventMessage
- * @package Zwei\EventRabbitMQ\Base
+ * @package Zwei\RabbitMqEvent\Base
  */
 class EventMessage
 {

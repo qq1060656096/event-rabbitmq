@@ -1,13 +1,13 @@
 {
-  "name": "zwei/event-rabbitmq",
+  "name": "zwei/rabbitmq-event",
   "type": "library",
-  "description": "the zwei event-rabbitmq package.",
+  "description": "the zwei rabbitmq event package.",
   "keywords": ["dependency injection"],
   "license": "BSD-3",
-  "homepage": "https://github.com/qq1060656096/event-rabbitmq",
+  "homepage": "https://github.com/qq1060656096/rabbitmq-event",
   "support": {
-    "issues": "https://github.com/qq1060656096/event-rabbitmq/issues",
-    "source": "https://github.com/qq1060656096/event-rabbitmq"
+    "issues": "https://github.com/qq1060656096/rabbitmq-event/issues",
+    "source": "https://github.com/qq1060656096/rabbitmq-event"
   },
   "authors": [
     {
@@ -17,12 +17,12 @@
   ],
   "autoload": {
     "psr-4":{
-      "Zwei\\EventRabbitMQ\\":"src/"
+      "Zwei\\RabbitMqEvent\\":"src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Zwei\\EventRabbitMQ\\Tests\\": "tests"
+      "Zwei\\RabbitMqEvent\\Tests\\": "tests"
     }
   },
   "require": {
@@ -31,5 +31,16 @@
   },
   "require-dev": {
     "phpunit/phpunit": "^5.6"
+  },
+  "scripts": {
+    "post-install-cmd":[
+      "Zwei\\RabbitMqEvent\\Composer\\Scripts::postPackageInstall"
+    ],
+    "post-package-install":[
+      "Zwei\\RabbitMqEvent\\Composer\\Scripts::postPackageInstall"
+    ],
+    "post-package-update":[
+      "Zwei\\RabbitMqEvent\\Composer\\Scripts::postPackageInstall"
+    ]
   }
 }

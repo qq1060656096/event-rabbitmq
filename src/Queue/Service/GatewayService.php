@@ -1,19 +1,19 @@
 <?php
-namespace Zwei\EventRabbitMQ\Queue\Service;
+namespace Zwei\RabbitMqEvent\Queue\Service;
 
 use Zwei\Base\Exception\ConfigException;
-use Zwei\EventRabbitMQ\Base\MongoDB;
-use Zwei\EventRabbitMQ\Base\RabbitMqConfig;
-use Zwei\EventRabbitMQ\Base\Helper;
-use Zwei\EventRabbitMQ\Base\RabbitMq;
-use Zwei\EventRabbitMQ\Queue\QueueInterface;
+use Zwei\RabbitMqEvent\Base\MongoDB;
+use Zwei\RabbitMqEvent\Base\RabbitMqConfig;
+use Zwei\RabbitMqEvent\Base\Helper;
+use Zwei\RabbitMqEvent\Base\RabbitMq;
+use Zwei\RabbitMqEvent\Queue\QueueInterface;
 
 
 /**
  * 网管服务分发
  *
  * Class GatewayService
- * @package Zwei\EventRabbitMQ\Queue
+ * @package Zwei\RabbitMqEvent\Queue
  */
 class GatewayService extends BaseService implements QueueInterface
 {
@@ -41,6 +41,7 @@ class GatewayService extends BaseService implements QueueInterface
         while (true) {
             $this->queue->consume([$this, 'receive']);
         }
+        $this->rabbtMq->disconnection();
     }
 
     /**

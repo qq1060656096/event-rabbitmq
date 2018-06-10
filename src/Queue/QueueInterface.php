@@ -1,11 +1,11 @@
 <?php
-namespace Zwei\EventRabbitMQ\Queue;
+namespace Zwei\RabbitMqEvent\Queue;
 
 /**
  * 队列接口
  *
  * Interface QueueInterface
- * @package Zwei\EventRabbitMQ\Queue
+ * @package Zwei\RabbitMqEvent\Queue
  */
 interface QueueInterface
 {

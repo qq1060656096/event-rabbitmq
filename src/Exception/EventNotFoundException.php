@@ -1,10 +1,10 @@
 <?php
-namespace Zwei\EventRabbitMQ\Exception;
+namespace Zwei\RabbitMqEvent\Exception;
 
 /**
  *
  * Class EventNotFoundException
- * @package Zwei\EventRabbitMQ\Exception
+ * @package Zwei\RabbitMqEvent\Exception
  */
 class EventNotFoundException extends EventMqRuntimeException
 {

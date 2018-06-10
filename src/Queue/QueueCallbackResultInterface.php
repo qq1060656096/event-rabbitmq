@@ -1,5 +1,5 @@
 <?php
-namespace Zwei\EventRabbitMQ\Queue;
+namespace Zwei\RabbitMqEvent\Queue;
 
 interface QueueCallbackResultInterface
 {

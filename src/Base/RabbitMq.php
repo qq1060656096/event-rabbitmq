@@ -1,11 +1,11 @@
 <?php
-namespace Zwei\EventRabbitMQ\Base;
+namespace Zwei\RabbitMqEvent\Base;
 
-use Zwei\EventRabbitMQ\Exception\EventMqRuntimeException;
+use Zwei\RabbitMqEvent\Exception\EventMqRuntimeException;
 
 /**
  * Class RabbitMq
- * @package Zwei\EventRabbitMQ\Base
+ * @package Zwei\RabbitMqEvent\Base
  */
 class RabbitMq
 {

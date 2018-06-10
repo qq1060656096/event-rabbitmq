@@ -1,12 +1,12 @@
 <?php
-namespace Zwei\EventRabbitMQ\Base;
+namespace Zwei\RabbitMqEvent\Base;
 
 
 /**
  * mongodb数据操作
  *
  * Class MongoDB
- * @package Zwei\EventRabbitMQ\Base
+ * @package Zwei\RabbitMqEvent\Base
  */
 class MongoDB
 {

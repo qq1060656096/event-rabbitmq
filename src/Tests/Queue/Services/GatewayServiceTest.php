@@ -1,16 +1,16 @@
 <?php
-namespace Zwei\EventRabbitMQ\Tests\Queue\Services;
+namespace Zwei\RabbitMqEvent\Tests\Queue\Services;
 
 use PHPUnit\Framework\TestCase;
-use Zwei\EventRabbitMQ\Base\RabbitMq;
-use Zwei\EventRabbitMQ\Base\RabbitMqConfig;
-use Zwei\EventRabbitMQ\Queue\Service\GatewayService;
+use Zwei\RabbitMqEvent\Base\RabbitMq;
+use Zwei\RabbitMqEvent\Base\RabbitMqConfig;
+use Zwei\RabbitMqEvent\Queue\Service\GatewayService;
 
 /**
  * 网管单元测试
  *
  * Class GatewayServiceTest
- * @package Zwei\EventRabbitMQ\Tests\Queue\Services
+ * @package Zwei\RabbitMqEvent\Tests\Queue\Services
  */
 class GatewayServiceTest extends TestCase
 {

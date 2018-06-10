@@ -1,13 +1,13 @@
 <?php
-namespace Zwei\EventRabbitMQ\Queue\Service;
+namespace Zwei\RabbitMqEvent\Queue\Service;
 
-use Zwei\EventRabbitMQ\Base\Helper;
-use Zwei\EventRabbitMQ\Base\RabbitMqConfig;
+use Zwei\RabbitMqEvent\Base\Helper;
+use Zwei\RabbitMqEvent\Base\RabbitMqConfig;
 
 /**
  * 服务基类
  * Class BaseService
- * @package Zwei\EventRabbitMQ\Queue
+ * @package Zwei\RabbitMqEvent\Queue
  */
 class BaseService
 {

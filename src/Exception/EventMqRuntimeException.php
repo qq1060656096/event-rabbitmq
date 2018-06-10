@@ -1,9 +1,9 @@
 <?php
-namespace Zwei\EventRabbitMQ\Exception;
+namespace Zwei\RabbitMqEvent\Exception;
 
 /**
  * Class EventMqRuntimeException
- * @package Zwei\EventRabbitMQ\Exception
+ * @package Zwei\RabbitMqEvent\Exception
  */
 class EventMqRuntimeException extends EventMqBaseException
 {
