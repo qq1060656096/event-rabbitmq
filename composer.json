@@ -2,8 +2,8 @@
   "name": "zwei/rabbitmq-event",
   "type": "library",
   "description": "the zwei rabbitmq event package.",
-  "keywords": ["dependency injection"],
-  "license": "BSD-3",
+  "keywords": ["rabbitmq event"],
+  "license": "BSD",
   "homepage": "https://github.com/qq1060656096/rabbitmq-event",
   "support": {
     "issues": "https://github.com/qq1060656096/rabbitmq-event/issues",
