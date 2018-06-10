@@ -54,7 +54,7 @@ class Scripts
     public static function copyScript($binDir, $fileName)
     {
         $binDir         = $binDir."/zwei/event-rabbitmq";
-        @mkdir($binDir);
+        @mkdir($binDir, null , true);
         $originFilePath = __DIR__.'/run-scripts/'.$fileName;
         $tartFilePath   = $binDir.'/'.$fileName;
         copy($originFilePath, $tartFilePath);

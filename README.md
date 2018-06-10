@@ -18,7 +18,7 @@
 
 ```php
 {
-	"require-dev": {
+	"require": {
 		"zwei/rabbitmq-event": "dev-master"
     }
 }	
