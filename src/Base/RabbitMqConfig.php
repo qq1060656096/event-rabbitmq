@@ -19,7 +19,7 @@ class RabbitMqConfig extends Config
      */
     public static function getCommon($name)
     {
-        return parent::get($name, 'event-rabbitmq', 'event-rabbitmq.config.yml');
+        return parent::get($name, 'rabbitmq-event', 'rabbitmq-event.config.yml');
     }
 
     /**
@@ -30,7 +30,7 @@ class RabbitMqConfig extends Config
      */
     public static function getEvent($name)
     {
-        return parent::get($name, 'event-rabbitmq', 'events.config.yml');
+        return parent::get($name, 'rabbitmq-event', 'events.config.yml');
     }
 
     /**
@@ -40,6 +40,6 @@ class RabbitMqConfig extends Config
      */
     public static function getQueue($name)
     {
-        return parent::get($name, 'event-rabbitmq', 'queues.config.yml');
+        return parent::get($name, 'rabbitmq-event', 'queues.config.yml');
     }
 }
