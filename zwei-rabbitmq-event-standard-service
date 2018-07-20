@@ -1,6 +1,10 @@
 #!/usr/bin/env php
 <?php
-include_once __DIR__.'/autoload.php';
+$zweiComposerAutoload = __DIR__.'/autoload.php';
+if (!file_exists($zweiComposerAutoload)) {
+    $zweiComposerAutoload = dirname(dirname(__DIR__)).'/autoload.php';
+}
+include_once $zweiComposerAutoload;
 
 $queueKey = $argv[1];
 $service = new \Zwei\RabbitMqEvent\Queue\Service\StandardService();
