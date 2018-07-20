@@ -40,5 +40,10 @@
       "Zwei\\RabbitMqEvent\\Composer\\Scripts::postPackageInstall"
     ]
   },
+  "bin": [
+    "zwei-rabbitmq-event-gateway-service",
+    "zwei-rabbitmq-event-send-test-event-message",
+    "zwei-rabbitmq-event-standard-service"
+  ],
   "minimum-stability": "dev"
 }
