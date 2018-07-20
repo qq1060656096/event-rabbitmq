@@ -1,0 +1,7 @@
+#!/usr/bin/env php
+<?php
+include_once __DIR__.'/autoload.php';
+
+$queueKey = $argv[1];
+$service = new \Zwei\RabbitMqEvent\Queue\Service\StandardService();
+$service->work($queueKey);
