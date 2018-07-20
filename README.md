@@ -51,22 +51,22 @@ composer install
 ## 网关分发
 ```bash
 # 网关分发
-php run-gateway-service
+php zwei-rabbitmq-event-gateway-service
 ```
 ## 普通队列消费事件
 ```bash
 # 普通队列
-php run-standard-service rabbit_queue_single
+php zwei-rabbitmq-event-standard-service rabbit_queue_single
 ```
 
 ## 发送测试事件脚本
-> php run-send-test-event-message 事件key 运行次数(-1: 一直运行) 间隔时间(默认1秒)
+> php zwei-rabbitmq-event-send-test-event-message 事件key 运行次数(-1: 一直运行) 间隔时间(默认1秒)
 
 ```bash
 # 发送测试事件
-php run-send-test-event-message 事件key 运行次数(-1: 一直运行) 间隔时间(默认1秒)
-php run-send-test-event-message event_demo_user_register_success -1 1 # 一直运行脚本,每秒发送一次事件
-php run-send-test-event-message event_demo_user_register_success 2 0 # 运行2次脚本,连续发送事件
+php zwei-rabbitmq-event-send-test-event-message 事件key 运行次数(-1: 一直运行) 间隔时间(默认1秒)
+php zwei-rabbitmq-event-send-test-event-message event_demo_user_register_success -1 1 # 一直运行脚本,每秒发送一次事件
+php zwei-rabbitmq-event-send-test-event-message event_demo_user_register_success 2 0 # 运行2次脚本,连续发送事件
 
 ```
 
