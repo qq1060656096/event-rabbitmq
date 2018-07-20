@@ -51,16 +51,16 @@ composer install
 ## 网关分发
 ```bash
 # 网关分发
-php vendor/bin/zwei/event-rabbitmq/run-gateway-service.php
+php vendor/bin/zwei/rabbitmq-event/run-gateway-service.php
 ```
 ## 普通队列消费事件
 ```bash
 # 网管测试
-php vendor/bin/zwei/event-rabbitmq/run-standard-service.php rabbit_queue_single
+php vendor/bin/zwei/rabbitmq-event/run-standard-service.php rabbit_queue_single
 ```
 
 ## 发送测试事件脚本
-> php vendor/bin/zwei/event-rabbitmq/run-send-test-event-message.php 事件key 运行次数(-1: 一直运行) 间隔时间(默认1秒)
+> php vendor/bin/zwei/rabbitmq-event/run-send-test-event-message.php 事件key 运行次数(-1: 一直运行) 间隔时间(默认1秒)
 
 ```bash
 # 发送测试事件
