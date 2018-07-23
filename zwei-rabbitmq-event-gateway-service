@@ -1,6 +1,6 @@
 #!/usr/bin/env php
 <?php
-$zweiComposerAutoload = __DIR__.'/autoload.php';
+$zweiComposerAutoload = __DIR__.'/vendor/autoload.php';
 if (!file_exists($zweiComposerAutoload)) {
     $zweiComposerAutoload = dirname(dirname(__DIR__)).'/autoload.php';
 }

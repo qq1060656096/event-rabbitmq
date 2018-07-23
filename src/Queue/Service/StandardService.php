@@ -232,7 +232,7 @@ class StandardService extends BaseService  implements QueueInterface
     {
         $eventConfig = RabbitMqConfig::getEvent($message['eventKey']);
         $callback = $eventConfig['callback'];
-        list($class, $staticFunction) = explode('.', $callback);
+        list($class, $staticFunction) = explode('::', $callback);
         unset($message['additional']);
         return call_user_func($class.'::'. $staticFunction, $message);
     }

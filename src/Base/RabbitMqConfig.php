@@ -19,7 +19,7 @@ class RabbitMqConfig extends Config
      */
     public static function getCommon($name)
     {
-        return parent::get($name, 'rabbitmq-event', 'rabbitmq-event.config.yml');
+        return parent::get($name, 'zwei-rabbitmq-event-base', 'rabbitmq-event.config.yml');
     }
 
     /**
@@ -30,7 +30,7 @@ class RabbitMqConfig extends Config
      */
     public static function getEvent($name)
     {
-        return parent::get($name, 'rabbitmq-event', 'events.config.yml');
+        return parent::get($name, 'zwei-rabbitmq-event-events', 'events.config.yml');
     }
 
     /**
@@ -40,6 +40,16 @@ class RabbitMqConfig extends Config
      */
     public static function getQueue($name)
     {
-        return parent::get($name, 'rabbitmq-event', 'queues.config.yml');
+        return parent::get($name, 'zwei-rabbitmq-event-queues', 'queues.config.yml');
+    }
+
+    /**
+     * 获取cron
+     * @param string $name
+     * @return mixed
+     */
+    public static function getCron($name)
+    {
+        return parent::get($name, 'zwei-rabbitmq-event-crons', 'crons.config.yml');
     }
 }

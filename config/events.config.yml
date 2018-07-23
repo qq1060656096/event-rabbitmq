@@ -1,20 +1,20 @@
 event_demo_user_register_success: # 测试y用户注册成功
   queue_key: "rabbit_queue_single" # 队列名
-  callback: "\\Zwei\\EventRabbitMQ\\Tests\\Demo\\EventCallback\\EventDemoUserRegister.registerSuccess" # 回调
+  callback: "\\Zwei\\EventRabbitMQ\\Tests\\Demo\\EventCallback\\EventDemoUserRegister::registerSuccess" # 回调
   forward: false # 是否转发
   forward_queue_key: "" # 转发到那个队列
   broadcast: true # 是否广播
 
 event_demo_user_register_fail: # 测试y用户注册失败
   queue_key: "rabbit_queue_single" # 队列名
-  callback: "\\Zwei\\EventRabbitMQ\\Tests\\Demo\\EventCallback\\EventDemoUserRegister.registerSuccess" # 回调
+  callback: "\\Zwei\\EventRabbitMQ\\Tests\\Demo\\EventCallback\\EventDemoUserRegister::registerSuccess" # 回调
   forward: false # 是否转发
   forward_queue_key: "" # 转发到那个队列
   broadcast: true # 是否广播
 
-event_demo_user_register_exception: # 测试y用户注册异常
+event_demo_user_register_exception: # 测试用户注册异常
   queue_key: "rabbit_queue_single" # 队列名
-  callback: "\\Zwei\\EventRabbitMQ\\Tests\\Demo\\EventCallback\\EventDemoUserRegister.registerSuccess" # 回调
+  callback: "\\Zwei\\EventRabbitMQ\\Tests\\Demo\\EventCallback\\EventDemoUserRegister::registerSuccess" # 回调
   forward: false # 是否转发
   forward_queue_key: "" # 转发到那个队列
   broadcast: true # 是否广播

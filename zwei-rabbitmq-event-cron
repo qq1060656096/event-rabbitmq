@@ -1,12 +1,12 @@
 #!/usr/bin/env php
 <?php
-// 标准队列
+// 计划任务
 $zweiComposerAutoload = __DIR__.'/vendor/autoload.php';
 if (!file_exists($zweiComposerAutoload)) {
     $zweiComposerAutoload = dirname(dirname(__DIR__)).'/autoload.php';
 }
 include_once $zweiComposerAutoload;
 
-$queueKey = $argv[1];
-$service = new \Zwei\RabbitMqEvent\Queue\Service\StandardService();
-$service->work($queueKey);
+$cronName   = $argv[1];
+$obj        = new Zwei\RabbitMqEvent\Cron\Cron();
+$obj->run($cronName);

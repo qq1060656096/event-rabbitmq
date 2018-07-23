@@ -43,7 +43,8 @@
   "bin": [
     "zwei-rabbitmq-event-gateway-service",
     "zwei-rabbitmq-event-send-test-event-message",
-    "zwei-rabbitmq-event-standard-service"
+    "zwei-rabbitmq-event-standard-service",
+    "zwei-rabbitmq-event-cron"
   ],
   "minimum-stability": "dev"
 }
