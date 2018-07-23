@@ -19,7 +19,6 @@ class Cron
         $cronInfo   = RabbitMqConfig::getCron($cronName);
         $class      = $cronInfo['class'];
         $callback   = $cronInfo['method'];
-        print_r($cronInfo);
         // ¥¶¿Ìcron
         $obj        = new $class();
         return call_user_func_array([$obj, $callback], []);
