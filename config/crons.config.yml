@@ -1,3 +1,3 @@
 cron_test: # 测试cron
-  class: "\\Zwei\\RabbitMqEvent\\Tests\\Demo\\Cron\\DemoCron" # 调用类
-  method: "testFunc" # 调用方法
+  class: "\\Zwei\\RabbitMqEventApp\\Crons\\DemoCron" # 调用类
+  method: "run" # 调用方法
