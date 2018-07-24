@@ -160,7 +160,7 @@ class StandardService extends BaseService  implements QueueInterface
 
         // 普通队列, 广播消息
         $eventConfig = RabbitMqConfig::getEvent($message['eventKey']);
-        if (!$this->listenQueue && $eventConfig['broadcast']) {
+        if ($this->queueType === QueueType::STANDARD && $eventConfig['broadcast']) {
             $rabbitMq = new RabbitMq($this->exchangeName, $this->exchangeType);
             $rabbitMq->send($message, $message['eventKey'].'_success');
         }
