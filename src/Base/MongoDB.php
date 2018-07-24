@@ -31,7 +31,7 @@ class MongoDB
             'db'                => $dbName
         );
         if ($config['is_auth']) {
-            $user = $config['DemoUserRegister'];
+            $user = $config['user'];
             $pass = $config['pass'];
             $server = "mongodb://{$user}:{$pass}@{$hosts}";
         } else {
