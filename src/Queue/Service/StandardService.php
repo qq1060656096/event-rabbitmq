@@ -34,8 +34,7 @@ class StandardService extends BaseService  implements QueueInterface
      * 网管分发
      * @param string $queueKey 队列名
      */
-    public function work($queueKey)
-    {
+    public function work($queueKey) {
 
         // 重启队列
 //        Helper::queueReload();
@@ -66,8 +65,7 @@ class StandardService extends BaseService  implements QueueInterface
      * @param \AMQPEnvelope $envelope
      * @param \AMQPQueue $queue
      */
-    public function receive($envelope, $queue)
-    {
+    public function receive($envelope, $queue) {
         $nowTime = time();
         // 保持心跳
 //        $this->ping();
@@ -108,140 +106,115 @@ class StandardService extends BaseService  implements QueueInterface
             $callbackResult = $this->callback($msgJson);
             if ($callbackResult->getCode() === Code::SUCCESS) {
                 $queue->ack($envelope->getDeliveryTag());
-                $this->callbackSuccess($msgJson, $callbackResult);
+                $this->updateAdditional($msgJson, $callbackResult, null);
+                $this->broadcast($msgJson);// 成功才广播消息
             } else {
                 $queue->ack($envelope->getDeliveryTag());
-                $this->callbackFail($callbackResult);
+                $this->updateAdditional($msgJson, $callbackResult, null);
             }
+
         } catch (\Exception $e) { // 非法消息,直接确认
             echo $e;
             $queue->ack($envelope->getDeliveryTag());
-            $this->callbackException($msgJson, $e);
+            $this->updateAdditional($msgJson, null, $e);
             return ;
         }
 
-
-
     }
 
-
     /**
-     * 回调成功
-     * @param array $message 消息
-     * @param CallbackResult $callbackResult 消息返回结果
+     *
+     * 广播消息(普通事件才会广播消息)
+     *
+     * @param array $message 消息内容
+     * @return bool|null
      */
-    public function callbackSuccess(array $message, CallbackResult $callbackResult)
-    {
-
-        $where = ['_id' => $message['_id']];
-        $additional = [
-            'code' => $callbackResult->getCode(),
-            'data' => $callbackResult->getData(),
-            'message' => $callbackResult->getMessage()
-        ];
-        switch ($this->queueType) {
-            case QueueType::LISTEN:// 监听队列
-                $additional['listenQueueKey'] = $this->queueKey;
-                break;
-            case QueueType::STANDARD:// 普通队列[标准队列]
-            default:
-                $additional['eventKey'] = $message['eventKey'];
-                break;
-        }
-        // 普通队列
-        $saveData = [
-            '$set' => ['status' => 1],
-            '$push' => [
-                'additional' => $additional
-            ]
-        ];
-        $collectionName = Helper::getCollectionName();
-        MongoDB::getInstance()->update($collectionName, $saveData, $where);
-
+    public function broadcast(array $message) {
         // 普通队列, 广播消息
         $eventConfig = RabbitMqConfig::getEvent($message['eventKey']);
-        if ($this->queueType === QueueType::STANDARD && $eventConfig['broadcast']) {
-            $rabbitMq = new RabbitMq($this->exchangeName, $this->exchangeType);
-            $rabbitMq->send($message, $message['eventKey'].'_success');
+        switch (true) {
+            case $this->queueType !== QueueType::STANDARD:// 不是普通事件不广播
+                return null;
+                break;
+            case !$eventConfig['broadcast']:// 事件不广播
+                return null;
+                break;
         }
-        return;
+        $rabbitMq = new RabbitMq($this->exchangeName, $this->exchangeType);
+        $result = $rabbitMq->send($message, $message['eventKey'].'_success');
+        return $result;
     }
 
+
     /**
-     * 回调失败
-     *
-     * @param array $message 消息
-     * @param CallbackResult $callbackResult 消息返回结果
+     * 更新附加信息
+     * @param array $message 消息内容
+     * @param CallbackResult $callbackResult 返回结果对象
+     * @param \Exception $e 异常
+     * @return bool
      */
-    public function callbackFail(array $message, CallbackResult $callbackResult)
-    {
+    public function updateAdditional(array $message, CallbackResult $callbackResult, \Exception $e) {
         $where = ['_id' => $message['_id']];
-        $additional = [
-            'code' => $callbackResult->getCode(),
-            'data' => $callbackResult->getData(),
-            'message' => $callbackResult->getMessage()
-        ];
         switch ($this->queueType) {
             case QueueType::LISTEN:// 监听队列
                 $additional['listenQueueKey'] = $this->queueKey;
                 break;
             case QueueType::STANDARD:// 普通队列[标准队列]
-            default:
                 $additional['eventKey'] = $message['eventKey'];
                 break;
+            default:
+
+                break;
         }
-        // 普通队列
-        $saveData = [
-            '$set' => ['status' => -1],
-            '$push' => [
-                'additional' => $additional
-            ]
-        ];
-        $collectionName = Helper::getCollectionName();
-        MongoDB::getInstance()->update($collectionName, $saveData, $where);
-        return;
-    }
+        switch (true) {
+            case !empty($e):// 异常
+                $exception = [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'code' => $e->getCode(),
+                    'traceString' => $e->getTraceAsString(),
+                ];
 
-    /**
-     * 回调函数异常
-     * @param array $message
-     * @param \Exception $e
-     */
-    public function callbackException(array $message, \Exception $e)
-    {
-        $exception = [
-            'file' => $e->getFile(),
-            'line' => $e->getLine(),
-            'code' => $e->getCode(),
-            'traceString' => $e->getTraceAsString(),
-        ];
+                $additional['code']     = Code::FAILURE;
+                $additional['data']     = [];
+                $additional['message']  = '异常';
+                $additional['error']    = $exception;
+                break;
+            default:
+                $additional['code']     = $callbackResult->getCode();
+                $additional['data']     = $callbackResult->getData();
+                $additional['message']  = $callbackResult->getMessage();
+                break;
+        }
 
-        $where = ['_id' => $message['_id']];
-        $additional = [
-            'code' => Code::FAILURE,
-            'data' => [],
-            'message' => "",
-            'error' => $exception,
-        ];
         switch ($this->queueType) {
             case QueueType::LISTEN:// 监听队列
-                $additional['listenQueueKey'] = $this->queueKey;
+                $saveData = [
+                    '$push' => [
+                        'additional' => $additional
+                    ]
+                ];
                 break;
             case QueueType::STANDARD:// 普通队列[标准队列]
+                $status = $callbackResult->getCode() === Code::SUCCESS ? 1 : -1;
+                $saveData = [
+                    '$set' => ['status' => $status],
+                    '$push' => [
+                        'additional' => $additional
+                    ]
+                ];
+                break;
             default:
-                $additional['eventKey'] = $message['eventKey'];
+                $saveData = [
+                    '$push' => [
+                        'additional' => $additional
+                    ]
+                ];
                 break;
         }
-
-        $saveData = [
-            '$set' => ['status' => -1],
-            '$push' => [
-                'additional' => $additional
-            ]
-        ];
         $collectionName = Helper::getCollectionName();
-        MongoDB::getInstance()->update($collectionName, $saveData, $where);
-        return;
+        $result = MongoDB::getInstance()->update($collectionName, $saveData, $where);
+        return $result;
     }
 
     /**
