@@ -5,7 +5,10 @@ use Zwei\RabbitMqEvent\Base\Helper;
 use Zwei\RabbitMqEvent\Base\MongoDB;
 use Zwei\RabbitMqEvent\Base\RabbitMq;
 use Zwei\RabbitMqEvent\Base\RabbitMqConfig;
+use Zwei\RabbitMqEvent\Queue\CallbackResult;
+use Zwei\RabbitMqEvent\Queue\Code;
 use Zwei\RabbitMqEvent\Queue\QueueInterface;
+use Zwei\RabbitMqEvent\Queue\QueueType;
 
 /**
  * 标准服务处理消息
@@ -16,11 +19,16 @@ use Zwei\RabbitMqEvent\Queue\QueueInterface;
 class StandardService extends BaseService  implements QueueInterface
 {
     /**
-     * 是不是监听队列
+     * 队列类型
      *
-     * @var bool
+     * @var string
+     *
+     * @see QueueType
+     * @see QueueType::STANDARD
+     * @see QueueType::LISTEN
+     *
      */
-    protected $listenQueue = false;
+    protected $queueType = '';
 
     /**
      * 网管分发
@@ -36,6 +44,7 @@ class StandardService extends BaseService  implements QueueInterface
         $this->exchangeName = $rabbitMqConfig['exchange_name'];
         $this->exchangeType = AMQP_EX_TYPE_TOPIC;
         $this->queueConfig  = RabbitMqConfig::getQueue($this->queueKey);
+        $this->queueType    = $this->queueConfig['queue_type'];
         $this->version      = Helper::getVersion();
 
         $this->rabbtMq      = new RabbitMq($this->exchangeName, $this->exchangeType);
@@ -96,12 +105,13 @@ class StandardService extends BaseService  implements QueueInterface
         }
         
         try {
-            if ($result = $this->callback($msgJson)) {
+            $callbackResult = $this->callback($msgJson);
+            if ($callbackResult->getCode() === Code::SUCCESS) {
                 $queue->ack($envelope->getDeliveryTag());
-                $this->callbackSuccess($msgJson, $result);
+                $this->callbackSuccess($msgJson, $callbackResult);
             } else {
                 $queue->ack($envelope->getDeliveryTag());
-                $this->callbackFail($msgJson);
+                $this->callbackFail($callbackResult);
             }
         } catch (\Exception $e) { // 非法消息,直接确认
             echo $e;
@@ -118,21 +128,25 @@ class StandardService extends BaseService  implements QueueInterface
     /**
      * 回调成功
      * @param array $message 消息
-     * @param array $additional 附加消息
+     * @param CallbackResult $callbackResult 消息返回结果
      */
-    public function callbackSuccess(array $message, array $additional)
+    public function callbackSuccess(array $message, CallbackResult $callbackResult)
     {
 
         $where = ['_id' => $message['_id']];
-        // 监听队列
-        if ($this->listenQueue) {
-            $additional = [
-                'listenQueueKey'    => $this->queueKey,
-            ];
-        } else {
-            $additional = [
-                'eventKey'    => $message['eventKey'],
-            ];
+        $additional = [
+            'code' => $callbackResult->getCode(),
+            'data' => $callbackResult->getData(),
+            'message' => $callbackResult->getMessage()
+        ];
+        switch ($this->queueType) {
+            case QueueType::LISTEN:// 监听队列
+                $additional['listenQueueKey'] = $this->queueKey;
+                break;
+            case QueueType::STANDARD:// 普通队列[标准队列]
+            default:
+                $additional['eventKey'] = $message['eventKey'];
+                break;
         }
         // 普通队列
         $saveData = [
@@ -157,20 +171,24 @@ class StandardService extends BaseService  implements QueueInterface
      * 回调失败
      *
      * @param array $message 消息
-     * @param array $additional 附加消息
+     * @param CallbackResult $callbackResult 消息返回结果
      */
-    public function callbackFail(array $message, array $additional = [])
+    public function callbackFail(array $message, CallbackResult $callbackResult)
     {
         $where = ['_id' => $message['_id']];
-        // 监听队列
-        if ($this->listenQueue) {
-            $additional = [
-                'listenQueueKey'    => $this->queueKey,
-            ];
-        } else {
-            $additional = [
-                'eventKey'    => $message['eventKey'],
-            ];
+        $additional = [
+            'code' => $callbackResult->getCode(),
+            'data' => $callbackResult->getData(),
+            'message' => $callbackResult->getMessage()
+        ];
+        switch ($this->queueType) {
+            case QueueType::LISTEN:// 监听队列
+                $additional['listenQueueKey'] = $this->queueKey;
+                break;
+            case QueueType::STANDARD:// 普通队列[标准队列]
+            default:
+                $additional['eventKey'] = $message['eventKey'];
+                break;
         }
         // 普通队列
         $saveData = [
@@ -199,18 +217,20 @@ class StandardService extends BaseService  implements QueueInterface
         ];
 
         $where = ['_id' => $message['_id']];
-        // 监听队列
-        if ($this->listenQueue) {
-            $additional = [
-                'listenQueueKey'    => $this->queueKey,
-                'error' => $exception,
-            ];
-
-        } else {// 普通事件队列
-            $additional = [
-                'eventKey'  => $message['eventKey'],
-                'error'     => $exception,
-            ];
+        $additional = [
+            'code' => Code::FAILURE,
+            'data' => [],
+            'message' => "",
+            'error' => $exception,
+        ];
+        switch ($this->queueType) {
+            case QueueType::LISTEN:// 监听队列
+                $additional['listenQueueKey'] = $this->queueKey;
+                break;
+            case QueueType::STANDARD:// 普通队列[标准队列]
+            default:
+                $additional['eventKey'] = $message['eventKey'];
+                break;
         }
 
         $saveData = [
@@ -225,8 +245,11 @@ class StandardService extends BaseService  implements QueueInterface
     }
 
     /**
+     *
+     * 调用回调方法
+     *
      * @param array $message
-     * @return mixed
+     * @return CallbackResult
      */
     public function callback(array $message)
     {
