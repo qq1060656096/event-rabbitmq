@@ -17,7 +17,14 @@ class Code
     const SUCCESS = '00000';
 
     /**
+     * “Ï≥£
+     */
+    const EXCEPTION = '99998';
+
+    /**
      *  ß∞‹
      */
     const FAILURE = '99999';
+
+
 }

@@ -47,6 +47,18 @@ class BaseService
     protected $queueConfig = null;
 
     /**
+     * 队列类型
+     *
+     * @var string
+     *
+     * @see QueueType
+     * @see QueueType::STANDARD
+     * @see QueueType::LISTEN
+     *
+     */
+    protected $queueType = '';
+
+    /**
      * 版本号
      * @var string
      */
@@ -83,7 +95,7 @@ class BaseService
         // 保持心跳
         if ($this->isPing()) {
             Helper::pingMongo();
-            Helper::pingRedis();
+//            Helper::pingRedis();
         }
     }
 }

@@ -38,9 +38,12 @@ class GatewayService extends BaseService implements QueueInterface
         $this->queue->setFlags(AMQP_DURABLE);// 设置队列持久化
         $this->queue->declareQueue();// 队列存在创建,否者就不创建
         $this->queue->bind($this->exchangeName, $this->queueConfig['route_key']);// 绑定route_key
-        while (true) {
-            $this->queue->consume([$this, 'receive']);
-        }
+
+        $consoleQueueConfig = RabbitMqConfig::getQueue('rabbit_queue_console');
+        $this->queue->bind($this->exchangeName, $consoleQueueConfig['route_key']);// 绑定route_key
+
+        $this->queue->consume([$this, 'receive']);
+
         $this->rabbtMq->disconnection();
     }
 
@@ -66,6 +69,10 @@ class GatewayService extends BaseService implements QueueInterface
                     $this->rabbtMq->disconnection();
                     exit();
                     break;
+                case 'ping':
+                    echo sprintf("[date:%s]Event RabbitMQ: gateway ping.\n", date('Y-m-d H:i:s', $nowTime));
+                    return;
+                    break;
             }
             return ;
         }
@@ -86,7 +93,6 @@ class GatewayService extends BaseService implements QueueInterface
             'ip'            => $msgJson['ip'],
             'version'       => $this->version,
             'data'          => $msgJson['data'],
-            'additional'    => [],
         ];
 
         // 持久化到mongodb

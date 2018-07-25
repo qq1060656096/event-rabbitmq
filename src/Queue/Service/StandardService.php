@@ -18,17 +18,24 @@ use Zwei\RabbitMqEvent\Queue\QueueType;
  */
 class StandardService extends BaseService  implements QueueInterface
 {
+
     /**
-     * 队列类型
-     *
+     * 事件使用队列key
      * @var string
-     *
-     * @see QueueType
-     * @see QueueType::STANDARD
-     * @see QueueType::LISTEN
-     *
      */
-    protected $queueType = '';
+    protected $eventUseQueueKey = null;
+
+    /**
+     * 事件使用队列类型
+     * @var string
+     */
+    protected $eventUseQueueType = null;
+
+    /**
+     * 事件使用队列配置
+     * @var array
+     */
+    protected $eventUseQueueConfig = null;
 
     /**
      * 网管分发
@@ -53,9 +60,10 @@ class StandardService extends BaseService  implements QueueInterface
         $this->queue->declareQueue();// 队列存在创建,否者就不创建
         $this->queue->bind($this->exchangeName, $this->queueConfig['route_key']);// 绑定route_key
 
-        while (true) {
-            $this->queue->consume([$this, 'receive']);
-        }
+        $consoleQueueConfig = RabbitMqConfig::getQueue('rabbit_queue_console');
+        $this->queue->bind($this->exchangeName, $consoleQueueConfig['route_key']);// 绑定route_key
+
+        $this->queue->consume([$this, 'receive']);
         $this->rabbtMq->disconnection();
     }
 
@@ -68,7 +76,7 @@ class StandardService extends BaseService  implements QueueInterface
     public function receive($envelope, $queue) {
         $nowTime = time();
         // 保持心跳
-//        $this->ping();
+        $this->ping();
 
         $msgJson = $envelope->getBody();
         $msgJson = json_decode($msgJson, true);
@@ -76,10 +84,13 @@ class StandardService extends BaseService  implements QueueInterface
             $queue->ack($envelope->getDeliveryTag());
             switch ($msgJson['data']) {
                 case 'reload':
-                    echo sprintf("[date:%s]Event RabbitMQ: gateway reload.\n", date('Y-m-d H:i:s', $nowTime));
+                    echo sprintf("[date:%s]Event RabbitMQ: queue key '%s' reload.\n", date('Y-m-d H:i:s', $nowTime), $this->queueKey);
                     $this->rabbtMq->disconnection();
                     exit();
                     break;
+                case 'ping':
+                    echo sprintf("[date:%s]Event RabbitMQ: queue key '%s' ping.\n", date('Y-m-d H:i:s', $nowTime), $this->queueKey);
+                    return;
             }
             return ;
         }
@@ -87,12 +98,24 @@ class StandardService extends BaseService  implements QueueInterface
         // 消息转发到指定队列执行
         if ($this->queueConfig['forward']) {
             $msgJson['forward'] = $this->queueKey ;
+            $msgJson['forwardLists'][] = $this->queueKey;// 转发列表，可能发生多次转发
             $forwardQueueConfig = RabbitMqConfig::getQueue($this->queueConfig['forward_queue_key']);
             // 消息转发
             $rabbitMq = new RabbitMq($this->exchangeName, $this->exchangeType);
             $rabbitMq->send($msgJson, $forwardQueueConfig['route_key']);
             $queue->ack($envelope->getDeliveryTag());
             return;
+        }
+
+        // 设置事件消费是的队列信息
+        $this->eventUseQueueKey     = $this->queueKey;
+        $this->eventUseQueueConfig  = $this->queueConfig;
+        $this->eventUseQueueType    = $this->queueType;
+        // 消息来自转发
+        if (isset($msgJson['forward'])) {
+            $this->eventUseQueueKey     = $msgJson['forwardLists'][0];
+            $this->eventUseQueueConfig  = RabbitMqConfig::getQueue($this->eventUseQueueKey);
+            $this->eventUseQueueType    = $this->eventUseQueueConfig['queue_type'];
         }
 
         // 消息版本不一致, 队列重启
@@ -103,11 +126,11 @@ class StandardService extends BaseService  implements QueueInterface
         }
         
         try {
+
             $callbackResult = $this->callback($msgJson);
             if ($callbackResult->getCode() === Code::SUCCESS) {
                 $queue->ack($envelope->getDeliveryTag());
                 $this->updateAdditional($msgJson, $callbackResult, null);
-                $this->broadcast($msgJson);// 成功才广播消息
             } else {
                 $queue->ack($envelope->getDeliveryTag());
                 $this->updateAdditional($msgJson, $callbackResult, null);
@@ -116,7 +139,8 @@ class StandardService extends BaseService  implements QueueInterface
         } catch (\Exception $e) { // 非法消息,直接确认
             echo $e;
             $queue->ack($envelope->getDeliveryTag());
-            $this->updateAdditional($msgJson, null, $e);
+            $callbackResult = new CallbackResult(Code::EXCEPTION, [], '异常');
+            $this->updateAdditional($msgJson, $callbackResult, $e);
             return ;
         }
 
@@ -140,6 +164,10 @@ class StandardService extends BaseService  implements QueueInterface
                 return null;
                 break;
         }
+
+        // 广播消息前删除转发消息, 避免普通队列需要转发，然后监听队列处理消息时也需要转发
+        unset($message['forward'], $message['forwardLists']);
+
         $rabbitMq = new RabbitMq($this->exchangeName, $this->exchangeType);
         $result = $rabbitMq->send($message, $message['eventKey'].'_success');
         return $result;
@@ -153,11 +181,11 @@ class StandardService extends BaseService  implements QueueInterface
      * @param \Exception $e 异常
      * @return bool
      */
-    public function updateAdditional(array $message, CallbackResult $callbackResult, \Exception $e) {
+    public function updateAdditional(array $message, CallbackResult $callbackResult, \Exception $e = null) {
         $where = ['_id' => $message['_id']];
-        switch ($this->queueType) {
+        switch ($this->eventUseQueueType) {
             case QueueType::LISTEN:// 监听队列
-                $additional['listenQueueKey'] = $this->queueKey;
+                $additional['listenQueueKey'] = $this->eventUseQueueKey;
                 break;
             case QueueType::STANDARD:// 普通队列[标准队列]
                 $additional['eventKey'] = $message['eventKey'];
@@ -175,19 +203,19 @@ class StandardService extends BaseService  implements QueueInterface
                     'traceString' => $e->getTraceAsString(),
                 ];
 
-                $additional['code']     = Code::FAILURE;
-                $additional['data']     = [];
+                $additional['code']     = Code::EXCEPTION;
                 $additional['message']  = '异常';
+                $additional['data']     = [];
                 $additional['error']    = $exception;
                 break;
             default:
                 $additional['code']     = $callbackResult->getCode();
-                $additional['data']     = $callbackResult->getData();
                 $additional['message']  = $callbackResult->getMessage();
+                $additional['data']     = $callbackResult->getData();
                 break;
         }
 
-        switch ($this->queueType) {
+        switch ($this->eventUseQueueType) {
             case QueueType::LISTEN:// 监听队列
                 $saveData = [
                     '$push' => [
@@ -214,6 +242,12 @@ class StandardService extends BaseService  implements QueueInterface
         }
         $collectionName = Helper::getCollectionName();
         $result = MongoDB::getInstance()->update($collectionName, $saveData, $where);
+        // 成功才广播消息
+        if ($callbackResult && $callbackResult->getCode() === Code::SUCCESS) {
+            $message['additional'] = $additional;
+            $this->broadcast($message);
+        }
+
         return $result;
     }
 
@@ -226,10 +260,21 @@ class StandardService extends BaseService  implements QueueInterface
      */
     public function callback(array $message)
     {
-        $eventConfig = RabbitMqConfig::getEvent($message['eventKey']);
-        $callback = $eventConfig['callback'];
-        list($class, $staticFunction) = explode('::', $callback);
-        unset($message['additional']);
+        switch ($this->eventUseQueueType) {
+            case QueueType::LISTEN:// 监听队列
+                $callback = $this->eventUseQueueConfig['callback'];
+                list($class, $staticFunction) = explode('::', $callback);
+                break;
+            case QueueType::STANDARD:// 普通队列[标准队列]
+                $eventConfig = RabbitMqConfig::getEvent($message['eventKey']);
+                $callback = $eventConfig['callback'];
+                list($class, $staticFunction) = explode('::', $callback);
+                break;
+            default:
+
+                break;
+        }
+//        unset($message['additional']);
         return call_user_func($class.'::'. $staticFunction, $message);
     }
 }
